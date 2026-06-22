@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+      <h1 class="title"></h1></h1>
+      <p id="currentTime"></p>
+      <script src="script.js"></script>
+  </body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Expense Calculator & PDF Generator</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --primary-dark: #1a365d;
+            --success: #2f855a;
+            --danger: #c53030;
+            --gray-bg: #f7fafc;
+            --border: #e2e8f0;
+            --text: #2d3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #edf2f7;
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: var(--primary-dark);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .statement-period {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 16px;
+            background: #ebf8ff;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .setup-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .setup-row .form-group {
+            flex: 1;
+        }
+
+        .row-inputs {
+            display: flex;
+            gap: 15px;
+            background: var(--gray-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .row-inputs .form-group {
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-add {
+            background-color: var(--primary);
+            color: white;
+            height: 42px;
+        }
+
+        .btn-add:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-delete {
+            background-color: transparent;
+            color: var(--danger);
+            padding: 5px 10px;
+            font-size: 13px;
+        }
+
+        .btn-delete:hover {
+            text-decoration: underline;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-generate {
+            background-color: var(--success);
+            color: white;
+            flex: 2;
+            padding: 14px;
+            font-size: 16px;
+        }
+
+        .btn-generate:hover {
+            background-color: #22543d;
+        }
+
+        .btn-clear {
+            background-color: #e2e8f0;
+            color: #4a5568;
+            flex: 1;
+            padding: 14px;
+            font-size: 16px;
+        }
+
+        .btn-clear:hover {
+            background-color: #cbd5e0;
+        }
+
+        .save-indicator {
+            text-align: right;
+            font-size: 12px;
+            color: var(--success);
+            margin-top: -10px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .summary-card {
+            background: var(--gray-bg);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .card-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #718096;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .val-income { color: var(--success); }
+        .val-expense { color: var(--danger); }
+        .val-savings { color: var(--primary); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+            text-align: left;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fdfdfd;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        /* PRINT / PDF STYLING */
+        @media print {
+            body {
+                background: white;
+                color: #000;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .no-print, .btn-delete {
+                display: none !important;
+            }
+            th {
+                background-color: #1a365d !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .statement-period {
+                background: #f7fafc !important;
+                border: 1px solid #cbd5e0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .summary-card {
+                border: 1px solid #cbd5e0 !important;
+                background: #f7fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            input, select {
+                border: none;
+                background: transparent;
+                font-weight: bold;
+                font-size: 16px;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Monthly Expense & Budget Statement</h1>
+            <p>Track your living expenses and wealth-building investments</p>
+            <div class="statement-period" id="displayPeriod">Statement Period: Loading...</div>
+        </div>
+
+        <div class="setup-row">
+            <div class="form-group no-print">
+                <label for="budgetPeriod">Select Month & Year</label>
+                <input type="month" id="budgetPeriod" onchange="updatePeriodDisplay(); saveData();">
+            </div>
+            <div class="form-group">
+                <label for="monthlyIncome">Total Monthly Income (₹)</label>
+                <input type="number" id="monthlyIncome" value="100000" placeholder="e.g. 100000" oninput="calculateBudget(); saveData();">
+            </div>
+        </div>
+
+        <div class="row-inputs no-print">
+            <div class="form-group">
+                <label for="expenseCategory">Expense Type</label>
+                <select id="expenseCategory">
+                    <option value="Grocery">Grocery</option>
+                    <option value="Fuel">Fuel</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Term Insurance">Term Insurance</option>
+                    <option value="NPS">NPS (National Pension System)</option>
+                    <option value="SSY">SSY (Sukanya Samriddhi Yojana)</option>
+                    <option value="PPF">PPF (Public Provident Fund)</option>
+                    <option value="Health Insurance">Health Insurance</option>
+                    <option value="Rent/EMI">Rent / EMI</option>
+                    <option value="Utilities">Utilities (Electricity/Water)</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="expenseAmount">Amount (₹)</label>
+                <input type="number" id="expenseAmount" placeholder="e.g. 5000">
+            </div>
+            <button class="btn-add" onclick="addExpenseRow()">Add Item</button>
+        </div>
+
+        <div class="save-indicator no-print" id="saveStatus">✓ All changes saved locally</div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="card-label">Total Income</div>
+                <div class="card-value val-income" id="lblIncome">₹1,00,000.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-label">Total Expenses</div>
+                <div class="card-value val-expense" id="lblExpenses">₹0.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-label">Net Savings</div>
+                <div class="card-value val-savings" id="lblSavings">₹1,00,000.00</div>
+            </div>
+        </div>
+
+        <h3>Itemized Breakdowns</h3>
+        <table id="expenseTable">
+            <thead>
+                <tr>
+                    <th>Category / Type</th>
+                    <th class="text-right">Amount</th>
+                    <th class="text-right no-print">Action</th>
+                </tr>
+            </thead>
+            <tbody id="expenseList">
+                </tbody>
+        </table>
+
+        <div class="action-buttons no-print">
+            <button class="btn-clear" onclick="resetCalculator()">Clear All Data</button>
+            <button class="btn-generate" onclick="window.print()">Generate & Download PDF</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for tracking memory state
+        let expenses = [];
+
+        // Main Application Loader Rule
+        window.onload = function() {
+            loadSavedData();
+            renderExpenses();
+        };
+
+        // Saves current state into localStorage memory
+        function saveData() {
+            const periodValue = document.getElementById("budgetPeriod").value;
+            const incomeValue = document.getElementById("monthlyIncome").value;
+
+            localStorage.setItem("budget_period", periodValue);
+            localStorage.setItem("budget_income", incomeValue);
+            localStorage.setItem("budget_expenses", JSON.stringify(expenses));
+
+            // Trigger smooth visual flash indicating successful local storage commit
+            const indicator = document.getElementById("saveStatus");
+            indicator.classList.add("show");
+            setTimeout(() => indicator.classList.remove("show"), 2000);
+        }
+
+        // Restores saved dataset variables upon window init
+        function loadSavedData() {
+            const savedPeriod = localStorage.getItem("budget_period");
+            const savedIncome = localStorage.getItem("budget_income");
+            const savedExpenses = localStorage.getItem("budget_expenses");
+
+            // Handle date picking defaults if nothing is saved yet
+            if (savedPeriod) {
+                document.getElementById("budgetPeriod").value = savedPeriod;
+            } else {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                document.getElementById("budgetPeriod").value = `${year}-${month}`;
+            }
+
+            // Load baseline values or configurations
+            if (savedIncome !== null) {
+                document.getElementById("monthlyIncome").value = savedIncome;
+            } else {
+                document.getElementById("monthlyIncome").value = "100000";
+            }
+
+            if (savedExpenses) {
+                expenses = JSON.parse(savedExpenses);
+            } else {
+                // Default fallback configuration starter template values
+                expenses = [
+                    { category: "Grocery", amount: 8000 },
+                    { category: "Credit Card", amount: 15000 },
+                    { category: "PPF", amount: 5000 }
+                ];
+            }
+
+            updatePeriodDisplay();
+        }
+
+        // Formats the header display date badge cleanly
+        function updatePeriodDisplay() {
+            const periodValue = document.getElementById("budgetPeriod").value;
+            if (!periodValue) return;
+
+            const [year, month] = periodValue.split("-");
+            const dateObj = new Date(year, month - 1);
+            const monthName = dateObj.toLocaleString('default', { month: 'long' });
+            document.getElementById("displayPeriod").innerText = `Statement Period: ${monthName} ${year}`;
+        }
+
+        // Redraws items list inside container
+        function renderExpenses() {
+            const listContainer = document.getElementById("expenseList");
+            listContainer.innerHTML = "";
+
+            expenses.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.category}</td>
+                    <td class="text-right">₹${item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    <td class="text-right no-print">
+                        <button class="btn-delete" onclick="removeExpenseItem(${index})">Remove</button>
+                    </td>
+                `;
+                listContainer.appendChild(row);
+            });
+
+            calculateBudget();
+        }
+
+        // Adds standard rows securely to memory lists
+        function addExpenseRow() {
+            const categorySelect = document.getElementById("expenseCategory");
+            const amountInput = document.getElementById("expenseAmount");
+
+            const category = categorySelect.value;
+            const amount = parseFloat(amountInput.value);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid numeric transaction amount.");
+                return;
+            }
+
+            expenses.push({ category, amount });
+            amountInput.value = ""; // Clear amount entry cell
+            renderExpenses();
+            saveData();
+        }
+
+        // Removes specified rows out of list stacks
+        function removeExpenseItem(index) {
+            expenses.splice(index, 1);
+            renderExpenses();
+            saveData();
+        }
+
+        // Calculates running balances out live onto UI nodes
+        function calculateBudget() {
+            const incomeInput = document.getElementById("monthlyIncome").value;
+            const totalIncome = parseFloat(incomeInput) || 0;
+
+            const totalExpenses = expenses.reduce((sum, item) => sum + item.amount, 0);
+            const netSavings = totalIncome - totalExpenses;
+
+            document.getElementById("lblIncome").innerText = "₹" + totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById("lblExpenses").innerText = "₹" + totalExpenses.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById("lblSavings").innerText = "₹" + netSavings.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+            const savingsCardValue = document.getElementById("lblSavings");
+            if (netSavings < 0) {
+                savingsCardValue.style.color = "var(--danger)";
+            } else {
+                savingsCardValue.style.color = "var(--primary)";
+            }
+        }
+
+        // Hard wipe function to reset memory storage values cleanly
+        function resetCalculator() {
+            if (confirm("Are you sure you want to clear all data from this statement tracker?")) {
+                localStorage.clear();
+                expenses = [];
+                document.getElementById("monthlyIncome").value = "0";
+                renderExpenses();
+                saveData();
+            }
+        }
+    </script>
+</body>
+</html>
